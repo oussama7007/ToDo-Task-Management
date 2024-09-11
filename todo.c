@@ -23,39 +23,72 @@ struct todo
 int task_number = 0;
 struct todo tasks[max];
 
-void    add_task()
-{
+void add_task() {
     int choice;
-    printf("how many task you wanna add ?\n");
-    scanf("%d", &choice );
-    for (int i = 0 ; i < choice ; i++)
-    {
-        char task[max]; 
-        printf("please enter your task's name number %d :", task_number + 1);
-        scanf(" %[^\n]", task );
-        strcpy(tasks[task_number].Name, task);
+    printf("How many tasks do you want to add? ");
+    scanf("%d", &choice);
+    
+    for (int i = 0; i < choice; i++) {
+        // Ensure the task ID is unique
+        int id_unique = 0;
+        int task_id;
+        while (!id_unique) {
+            printf("Enter a unique task ID: ");
+            scanf("%d", &task_id);
 
-        printf("Enter deadline (day):");
-        scanf("%d",&tasks[task_number].deadline.jour);
-        printf("enter deadline (mounth):");
-        scanf(" %d",&tasks[task_number].deadline.mois);
-        printf("Enter deadline (year):");
-        scanf("%d",&tasks[task_number].deadline.annee);
+            // Check if the ID is already taken
+            id_unique = 1;  // Assume it's unique
+            for (int j = 0; j < task_number; j++) {
+                if (tasks[j].id == task_id) {
+                    printf("Task ID %d is already taken, please enter a unique ID.\n", task_id);
+                    id_unique = 0;  // Set to 0 if ID is not unique
+                    break;
+                }
+            }
+        }
+        tasks[task_number].id = task_id;
 
-        printf("enter the task ID {} :");
-        scanf("%d",&tasks[task_number].id);
-        
+        // Task title
+        printf("Enter task title: ");
+        scanf(" %[^\n]", tasks[task_number].Name);
 
-        printf("Enter task status :");
-        scanf(" %[^\n]", tasks[task_number].status);
+        // Task description
+        printf("Enter task description: ");
+        scanf(" %[^\n]", tasks[task_number].description);
 
-        printf("Enter task description :");
-        scanf(" %[^\n]",tasks[task_number].description);
-        
-        printf("\nyour task has added successfully ...");   
-        task_number ++;
+        // Deadline
+        printf("Enter deadline (day month year): ");
+        scanf("%d %d %d", &tasks[task_number].deadline.jour, &tasks[task_number].deadline.mois, &tasks[task_number].deadline.annee);
+
+        // Status (to be completed, in progress, completed)
+        int status_choice;
+        printf("Select the status of the task:\n");
+        printf("1. To be completed\n");
+        printf("2. In progress\n");
+        printf("3. Completed\n");
+        printf("Enter your choice: ");
+        scanf("%d", &status_choice);
+
+        switch (status_choice) {
+            case 1:
+                strcpy(tasks[task_number].status, "To be completed");
+                break;
+            case 2:
+                strcpy(tasks[task_number].status, "In progress");
+                break;
+            case 3:
+                strcpy(tasks[task_number].status, "Completed");
+                break;
+            default:
+                printf("Invalid choice. Defaulting to 'To be completed'.\n");
+                strcpy(tasks[task_number].status, "To be completed");
+        }
+
+        task_number++;
+        printf("\nTask added successfully!\n");
     }
 }
+
 void    display_tasks()
 {
     for(int i = 0; i < task_number; i++)
@@ -126,8 +159,7 @@ void edit_task() {
         break;
     }
 }
-void delete_task()
-{
+void delete_task() {
     int id;
     printf("Enter the task ID to delete: ");
     scanf("%d", &id);
@@ -147,14 +179,87 @@ void delete_task()
         return;
     }
 
-    // Shift remaining tasks up by one position
-    for (int i = found; i < task_number - 1; i++) {
-        tasks[i] = tasks[i + 1];
-    }
+    // Display task information before deletion
+    printf("\nTask %d:\n", tasks[found].id);
+    printf("Name: %s\n", tasks[found].Name);
+    printf("Deadline: %02d/%02d/%04d\n", tasks[found].deadline.jour, tasks[found].deadline.mois, tasks[found].deadline.annee);
+    printf("Status: %s\n", tasks[found].status);
+    printf("Description: %s\n", tasks[found].description);
 
-    // Decrease the task number
-    task_number--;
-    printf("Task with ID %d deleted successfully.\n", id);
+    // Ask for confirmation before deleting
+    char confirmation;
+    printf("\nAre you sure you want to delete this task? (y/n): ");
+    scanf(" %c", &confirmation);
+
+    if (confirmation == 'y' || confirmation == 'Y') {
+        // Shift remaining tasks up by one position
+        for (int i = found; i < task_number - 1; i++) {
+            tasks[i] = tasks[i + 1];
+        }
+
+        // Decrease the task number
+        task_number--;
+        printf("Task with ID %d deleted successfully.\n", id);
+    } else {
+        printf("Task deletion canceled.\n");
+    }
+}
+void search_task() {
+    int search_choice;
+    printf("Search by:\n");
+    printf("1. Task ID\n");
+    printf("2. Task Title\n");
+    printf("Enter your choice: ");
+    scanf("%d", &search_choice);
+
+    if (search_choice == 1) {
+        int id;
+        printf("Enter the task ID to search: ");
+        scanf("%d", &id);
+
+        int found = -1;
+        for (int i = 0; i < task_number; i++) {
+            if (tasks[i].id == id) {
+                found = i;
+                break;
+            }
+        }
+
+        if (found == -1) {
+            printf("Task with ID %d not found.\n", id);
+        } else {
+            printf("\nTask %d:\n", tasks[found].id);
+            printf("Name: %s\n", tasks[found].Name);
+            printf("Deadline: %02d/%02d/%04d\n", tasks[found].deadline.jour, tasks[found].deadline.mois, tasks[found].deadline.annee);
+            printf("Status: %s\n", tasks[found].status);
+            printf("Description: %s\n", tasks[found].description);
+        }
+    } else if (search_choice == 2) {
+        char title[min];
+        printf("Enter the task title to search: ");
+        getchar();  // Clear buffer
+        scanf(" %[^\n]", title);
+
+        int found = -1;
+        for (int i = 0; i < task_number; i++) {
+            if (strcmp(tasks[i].Name, title) == 0) {
+                found = i;
+                break;
+            }
+        }
+
+        if (found == -1) {
+            printf("Task with title '%s' not found.\n", title);
+        } else {
+            printf("\nTask %d:\n", tasks[found].id);
+            printf("Name: %s\n", tasks[found].Name);
+            printf("Deadline: %02d/%02d/%04d\n", tasks[found].deadline.jour, tasks[found].deadline.mois, tasks[found].deadline.annee);
+            printf("Status: %s\n", tasks[found].status);
+            printf("Description: %s\n", tasks[found].description);
+        }
+    } else {
+        printf("Invalid choice.\n");
+    }
 }
 
 
